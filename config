@@ -1,0 +1,13 @@
+;Dice entries should be placed on one line in the following format
+;Title, dice, flavor 
+;An example (Remove the semicolon)
+;TODO: SUBSTITUTION OF MODIFIERS
+;STR = 
+;CON = 
+;DEX =
+;INT = 
+;WIS = 
+;CHA =
+Magic Missile, 2d4, You punch a dude in the face with magic, at distance.
+Fireball, 3d6, Enchanter Tim would be proud
+Staff (Melee), 1d8, Because real Wizards will beat you.
