@@ -2,11 +2,12 @@
 #include <time.h>
 
 int main() {
+  srand(time(NULL));
   int      scores[] = {20,10,5,16,17,18};
   DiceObj* obj      = newDiceObj("1d6+CON+STR+DEX", newCharScore(scores));
 
   int i;
-  for (i = 0; i < 20; i++) {
+  for (i = 0; i < 5; i++) {
     rollDiceObj(obj);
     printf("%s = %d\n", obj->resultString, obj->result);
   }
