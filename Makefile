@@ -1,20 +1,21 @@
-FLAGS		= -g -Wno-unused-value
+CFLAGS		= -g -Wno-unused-value
 CC          = clang
 EXEC		= diceRoll
 LIBS 		= -lcurses
 SRC			= src
 BUILD       = build
 
-all: main.o dice.o tags 
-	$(CC) $(FLAGS) $(BUILD)/main.o $(BUILD)/dice.o -o $(BUILD)/$(EXEC) $(LIBS)
+.PHONY: all clean docs
 
-main.o: $(SRC)/main.c $(SRC)/main.h
-	mkdir -p $(BUILD)
-	$(CC) $(FLAGS) -c $(SRC)/main.c -o $(BUILD)/main.o
+all: $(EXEC) tags
 
-dice.o: $(SRC)/dice.c $(SRC)/dice.h
-	mkdir -p $(BUILD)
-	$(CC) $(FLAGS) -c $(SRC)/dice.c -o $(BUILD)/dice.o
+$(EXEC): $(BUILD)/main.o $(BUILD)/dice.o
+	$(CC) $(CFLAGS) $(LIBS) -o $@ $^
+
+# Implicit rules for building object files:
+$(BUILD)/%.o: $(SRC)/%.c $(SRC)/%.h
+	@mkdir -p $(BUILD)
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean: 
 	rm -rf build
@@ -22,6 +23,9 @@ clean:
 	rm -f tags
 
 tags:
+	# This may be a little much for a C program; consider
+	# POSIX ctags whose rule would be:
+	# ctags $(SRC)/main.c $(SRC)/dice.c
 	ctags -R --c++-kinds=+p --fields=+iaS --extra=+q .
 
 docs:
