@@ -1,7 +1,8 @@
 /**
 * @file dice.c
 * @brief Implementation of functions defined and explained
-*        in dice.h
+*        in dice.h. Note: It is up to the developer to seed
+*        the RNG.
 * @author Jeremy Bernhardt
 * @version Alpha/Dev
 * @date 2011-05-31
@@ -13,25 +14,48 @@
 #include <stdio.h>
 #include <time.h>
 
-
-DiceObj* newDiceObj(char* diceString) {
+DiceObj*    newDiceObj(char* diceString, CharScores* scores) {
   //Initilize
   DiceObj* obj = malloc(sizeof(DiceObj));
   bzero(obj, sizeof(DiceObj));
 
-  //Set and return
+  //Set values
   obj->diceString  = diceString;
+  obj->stats       = scores;
+
   return obj;
 }
+CharScores* newCharScore(int* scores) {
+  //Check for correct sizing
+  CharScores* stats = malloc(sizeof(CharScores));
+
+  stats->Str = scores[STR];
+  stats->Dex = scores[DEX];
+  stats->Con = scores[CON];
+  stats->Int = scores[INT];
+  stats->Wis = scores[WIS];
+  stats->Cha = scores[CHA];
+
+  return stats;
+}
+
 void     freeDiceObj(DiceObj* obj) {
-  //Free and Null object
+  //Studies show that freeing a NULL pointer is the leading
+  //cause of cancer. Eat your wheaties and munch your K&R
+  if (obj == NULL) 
+    return;
+
+  //Check if the stats were initilized, free
+  if (obj->stats != NULL)
+    free(obj->stats);
+
+  //Lastly clean up the main object, NULL the pointer
   free(obj);
   obj = NULL;
+
+  return;
 }
 void     rollDiceObj(DiceObj* obj) {
-  //Seed the RNG
-  srand(time(NULL));
-
   //Seperate dicestring based on operators
   char** entries     = seperateDiceString(obj->diceString, "+-");
   int    arrayLength = getSeperatedLength(entries);
@@ -47,10 +71,8 @@ void     rollDiceObj(DiceObj* obj) {
     char** sep = seperateDiceString(entries[i], "d");
     int    len = getSeperatedLength(sep);
 
-    //If two interger elements
-    if ((len == 2) 
-     && (atoi(sep[0]) != 0)
-     && (atoi(sep[1]) != 0))
+    //Two interger elements, dice string
+    if ((len == 2) && (atoi(sep[0]) != 0) && (atoi(sep[1]) != 0))
     {
       int size   = atoi(sep[1]);
       int amount = atoi(sep[0]);
@@ -80,9 +102,8 @@ void     rollDiceObj(DiceObj* obj) {
           sprintf(formatString,"%s]",formatString);
       }
     }
-    //If one interger element
-    else if ((len == 1)
-          && (atoi(sep[0]) != 0)) {
+    //If one interger element, Simple mod
+    else if ((len == 1) && (atoi(sep[0]) != 0))  {
       int currentRoll = atoi(sep[0]);
       total += currentRoll;
 
@@ -92,7 +113,53 @@ void     rollDiceObj(DiceObj* obj) {
       else
         sprintf(formatString, "[%d]", currentRoll);
     }
+    //Modifer check
+    else if  ((len == 1) && (obj->stats != NULL)) {
+      int     mod,    //Modifier in the string 
+              val;    //Modifier value
+      char* textList[7] = {"STR", "DEX", "CON", "INT", "WIS", "CHA", ""};
 
+      for (mod = 0; mod < 6; mod++) 
+        if (strcmp(sep[0], textList[mod]) == 0) break;
+
+      //Not found, free alloc'd mem and proceed
+      if (mod == 6) {
+        freeDiceString(sep);
+        continue;
+      }
+      
+      //Retreive Mod value
+      switch(mod) {
+        case 0:
+          val = obj->stats->Str;
+          break;
+        case 1:
+          val = obj->stats->Dex;
+          break;
+        case 2:
+          val = obj->stats->Con;
+          break;
+        case 3:
+          val = obj->stats->Int;
+          break;
+        case 4:
+          val = obj->stats->Wis;
+          break;
+        case 5:
+          val = obj->stats->Cha;
+          break;
+      }
+      
+      val = calcMod(val);
+      total += val;
+
+      //Formatting jazz
+      if (i != 0)
+        sprintf(formatString, "%s + [%s:%d]", formatString, textList[mod], val);
+      else
+        sprintf(formatString, "[%s:%d]", textList[mod], val);
+    }
+    
     //Free allocated section
     freeDiceString(sep);
   }
@@ -104,8 +171,8 @@ void     rollDiceObj(DiceObj* obj) {
   obj->result = total;
   obj->resultString = formatString;
 }
-char*    rollDiceString(char *str) {
-  DiceObj* roller = newDiceObj(str);
+char*    rollDiceString(char *str, CharScores* scores) {
+  DiceObj* roller = newDiceObj(str, scores);
   rollDiceObj(roller);
 
   char* returnStr = malloc(sizeof(char*)*MAX_STRING_LEN);
@@ -143,7 +210,7 @@ char**   seperateDiceString(char *orgString, char* delin) {
     next = strpbrk(prev, delin);
   }
 
-  returnVar[i] = malloc(sizeof(char)*strlen(prev));
+  returnVar[i] = malloc(sizeof(char)*strlen(prev)+1);
   strcpy(returnVar[i], prev);
   returnVar[i+1] = NULL;
 
@@ -160,51 +227,70 @@ int      getSeperatedLength(char** diceArray) {
 
   return i;
 }
+int      calcMod(int score) {
+  return (int)((score-10)/2);
+}
 
-DiceItem** loadDiceFromFile(char* path) {
+void     loadDiceFromFile(char* path, DiceItem*** diceList, CharScores** charScore) {
+  //Standard as usual boys.
   FILE *file = fopen(path, "r");
-  if (file == NULL) 
-    return NULL;
+  if (file == NULL) {
+    perror("ERROR: NO CONFIG");
+    return;
+  }
   
-  DiceItem** list = malloc(sizeof(DiceItem*)*MAX_ENTRIES);
-  char       line  [MAX_STRING_LEN*3];
-  int        i, 
-             skip = 0;
+  //--This section will search through each line of the file, 
+  //  Parsing as necessary
+  DiceItem**  list  = malloc(sizeof(DiceItem*)*MAX_ENTRIES);
+  CharScores* stats = NULL;
+  int         skip  = 0,
+              i;
+  char        line  [MAX_STRING_LEN*3];
 
-  for (i = 0; i < MAX_ENTRIES; i++) list[i] = NULL;
+  //NULL the list
+  for (i = 0; i < MAX_ENTRIES; i++) 
+    list[i] = NULL;
+
+  //Read each line to buffer, act on it
   for (i = 0; fgets(line, MAX_STRING_LEN*3, file) != NULL; i++) {
-    if (line[0] == ';') { //Comment detection
+    //Comment detection
+    if (line[0] == ';' || line[0] == '\n') { 
       skip++;
       continue; 
     }
-
-    char *delin, *delin_2;
-    delin      = strchr(line, ',');
-    if (delin == NULL) break;
-    delin[0]   = '\0';
-    delin++;
-
-    delin_2    = strchr(delin, ',');
-    if (delin_2 == NULL) break;
-    delin_2[0] = '\0';
-    delin_2++;
     
-    char* nl = strchr(delin_2, '\n');
-    if (nl != NULL) nl[0] = '\0';
+    //Stat detection
+    if (line[0] == '#') {
+      stats = malloc(sizeof(CharScores));
+      sscanf(line, "#%d,%d,%d,%d,%d,%d", &(stats->Str),
+                                         &(stats->Dex),
+                                         &(stats->Con),
+                                         &(stats->Int),
+                                         &(stats->Wis),
+                                         &(stats->Cha));
+      skip++;
+      continue;
+    }
 
-    DiceItem* item    = malloc(sizeof(DiceItem));
-    item->title       = malloc(sizeof(char)*strlen(line));
-    item->diceString  = malloc(sizeof(char)*strlen(delin));
-    item->flavor      = malloc(sizeof(char)*strlen(delin_2));
+    //String parsing
+    char* title    = malloc(sizeof(char)*MAX_STRING_LEN);
+    char* flavor   = malloc(sizeof(char)*MAX_STRING_LEN);
+    char* dice     = malloc(sizeof(char)*MAX_STRING_LEN);
 
-    strcpy(item->title,      line);
-    strcpy(item->diceString, delin);
-    strcpy(item->flavor,     delin_2);
-    
-    list[i-skip] = item;
+    sscanf(line, "%[^,],%[^,],%[^,\n]", title, dice, flavor);
+
+    DiceItem* item   = malloc(sizeof(DiceItem));
+    item->title      = title;
+    item->flavor     = flavor;
+    item->diceString = dice;
+
+    list[i-skip]     = item;
   }
 
   list[i-skip] = NULL;
 
-  return list;
+  //Set and return
+  *diceList  = list;
+  *charScore = stats;
+  return;
 }

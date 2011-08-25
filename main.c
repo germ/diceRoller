@@ -1,5 +1,19 @@
 #include "main.h"
+#include <time.h>
 
+int main() {
+  int      scores[] = {20,10,5,16,17,18};
+  DiceObj* obj      = newDiceObj("1d6+CON+STR+DEX", newCharScore(scores));
+
+  int i;
+  for (i = 0; i < 20; i++) {
+    rollDiceObj(obj);
+    printf("%s = %d\n", obj->resultString, obj->result);
+  }
+
+  return 0;
+}
+/*
 int main(int argc, char*    argv[]) {
   //Ncurses Windows
   Window        *history_win,
@@ -9,11 +23,9 @@ int main(int argc, char*    argv[]) {
   //Dice Data
   HistoryData  **history;
   DiceItem     **dice;
+  CharScores    *stats;
 
-  //List offsets (for scrolling)
-  int            diceOffset     = 0,
-                 historyOffset  = 0,
-                 i;
+  int            i;
 
   //Input buffer
   char*          buffer;
@@ -21,13 +33,15 @@ int main(int argc, char*    argv[]) {
   //Ncurses init
   curses_init();
 
-  history_win = create_window(COLS*0.4, LINES, 0, 0, "[ History (J/K) ]");
+  history_win = create_window(COLS*0.4, LINES, 0, 0, "[ History ]");
   input_win   = create_window(COLS*0.6, 3, LINES-3, COLS*0.4, NULL);
   dice_win    = create_window(COLS*0.6, LINES-3, 0, COLS*0.4, "[ Preset (j/k) ]");
   
   history     = malloc(sizeof(DiceObj*)*MAX_HISTORY);
-  dice        = loadDice(argc, argv);
   buffer      = malloc(sizeof(char)*50);
+  dice        = malloc(sizeof(DiceItem*)*MAX_HISTORY);
+  stats       = malloc(sizeof(CharScores));
+  loadDice(argc, argv, &dice, &stats);
 
   for (i = 0; i < MAX_HISTORY; i++) history[i] = NULL;
   
@@ -42,8 +56,8 @@ int main(int argc, char*    argv[]) {
     //Fill dice list
     draw_title(dice_win);
 
-    int offset = 1 - diceOffset;
-    for (i = diceOffset; dice[i] != NULL; i++) {
+    int offset = 1;
+    for (i = 0; dice[i] != NULL; i++) {
       mvwprintw(dice_win->win, offset+i,    1, "%2d) %s", i+1, dice[i]->title);
       mvwprintw(dice_win->win,(offset+i)+1, 7, dice[i]->flavor);
 
@@ -58,8 +72,8 @@ int main(int argc, char*    argv[]) {
     //--HISTORY WINDOW--
     draw_title(history_win);
     //Fill History list
-    offset = 1-historyOffset;
-    for (i = historyOffset; history[i] != NULL; i++) {
+    offset = 1;
+    for (i = 0; history[i] != NULL; i++) {
       mvwprintw(history_win->win, i+offset, 1,
                 "%2d) %s",i+1, history[i]->title);
       mvwprintw(history_win->win, i+offset+1, 5,
@@ -87,8 +101,7 @@ int main(int argc, char*    argv[]) {
     mvwgetstr(input_win->win, 1, 7, buffer);
 
     //Process input
-    clear_movements(buffer, &diceOffset, &historyOffset);
-    if (parse_input(buffer, history, dice) == 2)
+    if (parse_input(buffer, history, dice, stats) == 2)
       break;
 
     //Clear buffer
@@ -97,6 +110,7 @@ int main(int argc, char*    argv[]) {
   endwin();
   return 0;
 }
+*/
 
 //Kludge to clear crap left behind by scrolling
 int clean_hack(WINDOW *win, int size, int start, int end) {
@@ -117,49 +131,8 @@ int clean_hack(WINDOW *win, int size, int start, int end) {
   return 0;
 }
 
-//Remove the movement characters from the buffer
-int clear_movements(char* command,int *diceOffset,int *historyOffset) {
-  int offset = 0, 
-      total  = 0,
-      i;
-
-  //Modify the list offsets
-  for (i = 0; i < strlen(command); i++) {
-    if      (command[i] == 'j') { 
-      if (*diceOffset != 0) 
-        (*diceOffset)--;
-    }
-    else if (command[i] == 'J') { 
-      if (*historyOffset != 0)  
-        (*historyOffset)--;
-    }
-    else if (command[i] == 'k') 
-      (*diceOffset)++;
-    else if (command[i] == 'K')
-      (*historyOffset)++;
-    else                                                   total++;
-  }
-
-  //Remove elements from string, Hacky as shit
-  char* temp = malloc(sizeof(command));
-  strcpy(temp, command);
-  for (i = 0; i <= strlen(command); i++) {
-    if (strchr("kKJj", command[i]) == NULL) 
-      temp[i-offset] = command[i];
-    else 
-      offset++;
-  }
-  temp[i-offset] = '\0';
-
-  //Swap and return
-  strcpy(command, temp);
-  free(temp);
-
-  return total;
-}
-
 //Do *something* with the crap the user just gave us
-int parse_input(char* cmd, HistoryData** history_list, DiceItem** dice_list) {
+int parse_input(char* cmd, HistoryData** history_list, DiceItem** dice_list, CharScores* scores) {
   //Check if string is valid
   int len = strlen(cmd);
 
@@ -174,7 +147,7 @@ int parse_input(char* cmd, HistoryData** history_list, DiceItem** dice_list) {
   HistoryData *data = malloc(sizeof(HistoryData));
 
   //Check for raw dice
-  char* rawTest = rollDiceString(cmd);  
+  char* rawTest = rollDiceString(cmd, scores);  
 
   //Run tests (Ugly hack)
   //Partial dice set, Make whole
@@ -232,6 +205,8 @@ int parse_input(char* cmd, HistoryData** history_list, DiceItem** dice_list) {
 
     data->atk.diceString = new;
     data->title = new;
+    
+    free(new);
   }
   //Undefinded, Clear and exit
   else {
@@ -281,14 +256,11 @@ int draw_title(Window *win) {
 }
 
 //Helper function, Check for and load settings
-DiceItem** loadDice(int nArgs, char** args) {
-  //Allocate item for list
-  DiceItem** return_structure;
-
+void   loadDice(int nArgs, char** args, DiceItem*** diceList, CharScores** scores) {
   //Check if a config file was passed
   if (nArgs == 2) {
-    return_structure = loadDiceFromFile(args[1]);
-    return return_structure;
+    loadDiceFromFile(args[1], diceList, scores);
+    return;
   }
   
   //No config, show error
@@ -297,11 +269,13 @@ DiceItem** loadDice(int nArgs, char** args) {
   notice->flavor   = "No config file passed. See the documentation for more info.";
   notice->diceString = "1d20";
 
-  return_structure = malloc(sizeof(DiceItem*)*2);
-  return_structure[0] = notice;
-  return_structure[1] = NULL;
+  DiceItem** list = malloc(sizeof(DiceItem*)*2);
+  list[0]         = notice;
+  list[1]         = NULL;
+  *diceList       = list; 
+  
 
-  return return_structure;
+  return;
 }
 
 //Helper function, start curses

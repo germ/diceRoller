@@ -20,13 +20,10 @@ typedef struct historyData {
 } HistoryData;
 
 //Helper function, Check for and load settings
-DiceItem** loadDice(int nArgs, char** args);
-
-//Remove the movement characters from the buffer
-int clear_movements(char *command_string, int *diceOffset,int *historyOffset);
+void loadDice(int nArgs, char** args, DiceItem*** diceList, CharScores** scores);
 
 //Kludge to clear crap left behind by scrolling
-int clean_hack(WINDOW *win, int size, int start, int end);
+int  clean_hack(WINDOW *win, int size, int start, int end);
 
 //Helper function, start curses
 void curses_init();
@@ -35,7 +32,7 @@ void curses_init();
 Window* create_window(int width, int height, int x, int y, char* title);
 
 //Draw window title message
-int draw_title(Window *win);
+int  draw_title(Window *win);
 
 //Do *something* with the crap the user just gave us
-int parse_input(char* cmd, HistoryData** history_list, DiceItem** dice_list);
+int parse_input(char* cmd, HistoryData** history_list, DiceItem** dice_list, CharScores* scores);

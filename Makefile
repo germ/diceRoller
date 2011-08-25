@@ -1,21 +1,20 @@
-FLAGS		= -g 
-CC			=	gcc
+FLAGS		= -g -Wno-unused-value
+CC      = clang
 EXEC		= diceRoll
 LIBS 		= -lcurses
-FLAGS 	= -Wall
 
-all: main.o dice.o tags
-	gcc -g main.o dice.o -o $(EXEC) $(LIBS)
+all: clean main.o dice.o tags
+	$(CC) $(FLAGS) main.o dice.o -o $(EXEC) $(LIBS)
 
 main.o: main.c main.h
-	gcc $(FLAGS) -c main.c 
+	$(CC) $(FLAGS) -c main.c 
 
 dice.o: dice.c dice.h
-	gcc $(FLAGS) -c dice.c
+	$(CC) $(FLAGS) -c dice.c
 
 clean: 
 	rm -f *.o
-	rm $(EXEC)
+	rm -f $(EXEC)
 
 splint:
 	splint *.c *.h
