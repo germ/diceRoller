@@ -2,7 +2,7 @@
 ;The character score modifiers
 ;Format is 
 ;#STR, DEX, CON, INT, WIS, CHA
-#10,10,10,10,10,10;
+#10,12,14,8,6,20;
 
 ;Dice entries should be placed on one line in the following format
 ;Title, dice, flavor 

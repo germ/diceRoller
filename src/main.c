@@ -1,7 +1,7 @@
 #include "main.h"
 #include <time.h>
 
-int main() {
+int       main() {
   srand(time(NULL));
   int      scores[] = {20,10,5,16,17,18};
   DiceObj* obj      = newDiceObj("1d6+CON+STR+DEX", newCharScore(scores));
@@ -15,7 +15,7 @@ int main() {
   return 0;
 }
 /*
-int main(int argc, char*    argv[]) {
+int       main(int argc, char*    argv[]) {
   //Ncurses Windows
   Window        *history_win,
                 *input_win,
@@ -113,8 +113,7 @@ int main(int argc, char*    argv[]) {
 }
 */
 
-//Kludge to clear crap left behind by scrolling
-int clean_hack(WINDOW *win, int size, int start, int end) {
+int       clean_hack(WINDOW *win, int size, int start, int end) {
   int i;
   char* clearString;
   
@@ -131,9 +130,7 @@ int clean_hack(WINDOW *win, int size, int start, int end) {
 
   return 0;
 }
-
-//Do *something* with the crap the user just gave us
-int parse_input(char* cmd, HistoryData** history_list, DiceItem** dice_list, CharScores* scores) {
+int       parse_input(char* cmd, HistoryData** history_list, DiceItem** dice_list, CharScores* scores) {
   //Check if string is valid
   int len = strlen(cmd);
 
@@ -232,9 +229,7 @@ int parse_input(char* cmd, HistoryData** history_list, DiceItem** dice_list, Cha
 
   return 0;
 }
-
-//Helper function, returns finely crafted window
-Window* create_window(int width, int height, int x, int y, char* title) {
+Window*   create_window(int width, int height, int x, int y, char* title) {
   Window* window = malloc(sizeof(Window));
   window->x       = x;
   window->y       = y;
@@ -245,9 +240,7 @@ Window* create_window(int width, int height, int x, int y, char* title) {
 
   return window;
 }
-
-//Draw window title message
-int draw_title(Window *win) { 
+int       draw_title(Window *win) { 
   if (win->title != NULL) {
     int offset = (win->width/2) - (strlen(win->title)/2);
     mvwprintw(win->win, 0, offset, win->title); 
@@ -255,9 +248,7 @@ int draw_title(Window *win) {
 
   return 0;
 }
-
-//Helper function, Check for and load settings
-void   loadDice(int nArgs, char** args, DiceItem*** diceList, CharScores** scores) {
+void      loadDice(int nArgs, char** args, DiceItem*** diceList, CharScores** scores) {
   //Check if a config file was passed
   if (nArgs == 2) {
     loadDiceFromFile(args[1], diceList, scores);
@@ -278,9 +269,7 @@ void   loadDice(int nArgs, char** args, DiceItem*** diceList, CharScores** score
 
   return;
 }
-
-//Helper function, start curses
-void curses_init() {
+void      curses_init() {
   initscr();
   cbreak();
 }

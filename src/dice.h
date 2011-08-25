@@ -6,7 +6,6 @@
 * @date 2011-05-30
 */
 
-//TODO: Intergrate Scores
 #define MAX_STRING_LEN 1024   ///< Max string buffer size
 #define USELESS_CHAR   '/'    ///< Character that will never be parsed
 #define MAX_ENTRIES    100    ///< Maximum number of entries in a seperated dice string
@@ -60,7 +59,9 @@ CharScores* newCharScore(int* scores);
 /**
 * @brief Create a new DiceObj 
 *
-* @param dStr A String containg the dice to be rolled. Input in the form of
+* @param scores An array containg player scores.
+* @param diceString 
+*             A String containg the dice to be rolled. Input in the form of
 *             operator (+, -) seperated entries of either
 *               - (Number of Dice)d(Sides per dice)
 *               - (Constant)
@@ -71,10 +72,6 @@ CharScores* newCharScore(int* scores);
 *               - 3
 *               - 3d6+5d500+3
 *               - Etc.
-* @param scores An array containg player scores.
-*               passed values should be a 6 element integer array in the order
-*               of STR, CON, DEX, INT, WIS, CHA
-*
 * @return A pointer to a newly initilized DiceObj
 */
 DiceObj*    newDiceObj(char* diceString, CharScores* scores);
@@ -96,6 +93,7 @@ void        rollDiceObj(DiceObj* obj);
 /**
 * @brief One time no-data roll
 * @param str Dice string to roll
+* @param scores Character scores to use or NULL
 * @return Pointer to a string containing a formatted result
 */
 char*       rollDiceString(char *str, CharScores* scores);
