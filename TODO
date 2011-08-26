@@ -4,6 +4,8 @@
 - gitignore file as per dannomacs suggestion
 - Fix segfaults on navigation of main list when using ncurses gui
 - Clean up the code for others to read
+- Standard Include guards
+- Find and fix any memory leaks
 
 --WISHES--
 - Phenny IRC bot integration for #sktechworks
