@@ -1,3 +1,6 @@
+#ifndef MAIN_C
+#define MAIN_C
+
 #include "main.h"
 #include <time.h>
 
@@ -273,3 +276,5 @@ void      curses_init() {
   initscr();
   cbreak();
 }
+
+#endif /* MAIN_C */

@@ -1,3 +1,6 @@
+#ifndef DICE_H
+#define DICE_H
+
 /**
 * @file dice.h
 * @brief Function descriptions pertaining to the handling of n-sided die
@@ -132,3 +135,5 @@ int         getSeperatedLength(char** diceArray);
 * @return The modifier
 */
 int calcMod(int score);
+
+#endif /* DICE_H */

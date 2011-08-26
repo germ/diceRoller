@@ -18,15 +18,10 @@ $(BUILD)/%.o: $(SRC)/%.c $(SRC)/%.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean: 
-	rm -rf build
-	rm -rf doxy
-	rm -f tags
+	rm -rf build doxy tags $(EXEC)
 
 tags:
-	# This may be a little much for a C program; consider
-	# POSIX ctags whose rule would be:
-	# ctags $(SRC)/main.c $(SRC)/dice.c
-	ctags -R --c++-kinds=+p --fields=+iaS --extra=+q .
+	ctags $(SRC)/main.c $(SRC)/dice.c
 
 docs:
 	doxygen

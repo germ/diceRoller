@@ -1,3 +1,6 @@
+#ifndef MAIN_H
+#define MAIN_H
+
 #include "dice.h"
 #include <ncurses.h>
 #include <stdlib.h>
@@ -36,3 +39,5 @@ int  draw_title(Window *win);
 
 //Do *something* with the crap the user just gave us
 int parse_input(char* cmd, HistoryData** history_list, DiceItem** dice_list, CharScores* scores);
+
+#endif /* MAIN_H */

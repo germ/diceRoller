@@ -1,3 +1,6 @@
+#ifndef DICE_C
+#define DICE_C
+
 /**
 * @file dice.c
 * @brief Implementation of functions defined and explained
@@ -294,3 +297,5 @@ void     loadDiceFromFile(char* path, DiceItem*** diceList, CharScores** charSco
   *charScore = stats;
   return;
 }
+
+#endif /* DICE_C */
