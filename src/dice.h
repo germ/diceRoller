@@ -4,7 +4,7 @@
 /**
 * @file dice.h
 * @brief Function descriptions pertaining to the handling of n-sided die
-* @author Jeremy Bernhardt
+* @author 
 * @version Alpha/Dev
 * @date 2011-05-30
 */
